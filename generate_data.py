@@ -4,6 +4,7 @@ from enum import Enum
 from random import randrange, random, choice
 from itertools import count
 import sys
+from typing import List
 
 
 @dataclass
@@ -48,8 +49,10 @@ class Address:
                 room_index=round(random(), 2)
         )
 
-    def generate_insert(self) -> str:
-        return f'insert into Address(id, area, windows, phys_address, floor, room, room_idx) values {self.id, self.area, self.windows, self.phys_address, self.floor, self.room, self.room_index};'
+    @staticmethod
+    def generate_inserts(addresses) -> str:
+        values = map(lambda a: f"{a.id, a.area, a.windows, a.phys_address, a.floor, a.room, a.room_index}", addresses)
+        return f'insert into Address(id, area, windows, phys_address, floor, room, room_idx) values\n\t' + ',\n\t'.join(values) + ";"
 
 
 @dataclass
@@ -72,8 +75,10 @@ class Lightbulb:
                 address_ref=addres
         )
 
-    def generate_insert(self) -> str:
-        return f'insert into LightBulb(serial_number, state, light_temp, price, address) values {self.serial_number, self.state.name, self.light_temp, self.price, self.address_ref.id};'
+    @staticmethod
+    def generate_inserts(bulbs) -> str:
+        values = map(lambda b: f"{b.serial_number, b.state.name, b.light_temp, b.price, b.address_ref.id}", bulbs)
+        return f'insert into LightBulb(serial_number, state, light_temp, price, address) values\n\t' + ',\n\t'.join(values) + ";"
 
 
 @dataclass
@@ -92,21 +97,20 @@ class Temperature:
                 dt.datetime(2023, 2, randrange(1, dt.date.today().day), randrange(0, 24), randrange(0, 60))
         )
 
-    def generate_insert(self) -> str:
-        return f'insert into Temperature(bulb, temp, measure_time) values {self.bulb, self.t, self.time.strftime("%Y-%m-%d %H:%M")};'
+    @staticmethod
+    def generate_inserts(temps):
+        values = map(lambda t: f"{t.bulb, t.t, t.time.strftime('%Y-%m-%d %H:%M')}", temps)
+        return f'insert into Temperature(bulb, temp, measure_time) values\n\t' + ',\n\t'.join(values) + ";"
 
 
 if __name__ == '__main__':
     bulb_count = int(sys.argv[1])
 
     rooms = [Address.generate() for _ in range(max(1, int(bulb_count / 50)))]
-    for room in rooms:
-        print(room.generate_insert())
+    print(Address.generate_inserts(rooms))
 
     bulbs = [Lightbulb.generate(choice(rooms)) for _ in range(bulb_count)]
-    for bulb in bulbs:
-        print(bulb.generate_insert())
+    print(Lightbulb.generate_inserts(bulbs))
 
     temps = [Temperature.generate(choice(bulbs)) for _ in range(bulb_count * 10)]
-    for temp in temps:
-        print(temp.generate_insert())
+    print(Temperature.generate_inserts(temps))
