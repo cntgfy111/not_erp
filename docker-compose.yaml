@@ -1,0 +1,24 @@
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: pass
+    ports:
+      - 5432:5432
+    volumes:
+      - "./sql:/docker-entrypoint-initdb.d"
+
+  pgweb:
+    container_name: pgweb
+    restart: always
+    image: sosedoff/pgweb
+    ports: 
+      - "8081:8081" 
+    links: 
+      - db:db
+    environment:
+      - PGWEB_DATABASE_URL=postgres://postgres:pass@db:5432/postgres?sslmode=disable
+    depends_on:
+      - db
